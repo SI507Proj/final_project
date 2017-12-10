@@ -1,5 +1,6 @@
 import sys
 import logging
+from database_model import *
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -22,6 +23,9 @@ class TrendManager(object):
         self.loc_quries = self.__generate_location_query()
         self.reg_quries = self.__generate_region_query()
 
+        # setup trend db manager
+        self.youtube_db_manager = DBManager()
+
     def __generate_location_query(self):
         quries = []
         options = {}
@@ -41,11 +45,23 @@ class TrendManager(object):
             quries.append(options)
         return quries
 
+    def insert_to_db(self, region_trend):
+        region_data = {'Code': region_trend.code,  'Name': region_trend.region}
+        self.youtube_db_manager.insert(self.youtube_db_manager.REGION_TABLE, region_data)
+
+        for video in region_trend.videos:
+            video_data = {"ID": video.id, "Title": video.title, "Kind": video.kind, "Code": region_trend.code}
+            self.youtube_db_manager.insert(self.youtube_db_manager.VIDEO_TABLE, video_data)
+
+    def query_by_region(self, region):
+        return self.youtube_db_manager.inner_join_query(region)
+
+
 class Video(object):
     def __init__(self, item):
-        self.kind  = item[KIND]
-        self.title = item[TITLE]
         self.id    = item[ID]
+        self.title = item[TITLE]
+        self.kind  = item[KIND]
         self.url   = "http://www.youtube.com/embed/{0}".format(item[ID])
 
     def __str__(self):
@@ -56,6 +72,7 @@ class Video(object):
 
     def __contains__(self, word):
         return word in self.title
+
 
 class RegionTrend(object):
     def __init__(self, region_info, video_list):

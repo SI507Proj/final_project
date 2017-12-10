@@ -14,6 +14,7 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 
 from youtube_manager import *
+from cache_manager import *
 
 #gae_dir = google.__path__.append('/path/to/appengine_sdk//google_appengine/google')
 #sys.path.insert(0, gae_dir) # might not be necessary
@@ -66,6 +67,18 @@ def youtube_api_request():
 
   return flask.render_template('youtube.html', items_to_embed=info_to_embed)
 
+@app.route('/region_db')
+def show_db():
+    region = flask.request.args.get('q')
+    response = trend_manager.query_by_region(region)
+
+    items = []
+    for info in response:
+        items.append("%s (%s)" % (info['Title'], info['ID']))
+
+    return flask.render_template('region_db.html', items=items)
+
+
 @app.route('/authorize')
 def authorize():
   # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
@@ -106,7 +119,7 @@ def oauth2callback():
   credentials = flow.credentials
   flask.session['credentials'] = credentials_to_dict(credentials)
 
-  return flask.redirect(flask.url_for('test_api_request'))
+  return flask.redirect(flask.url_for('youtube_api_request'))
 
 @app.route('/revoke')
 def revoke():
@@ -149,24 +162,38 @@ def query_region_trend(client):
         region_code = query['region_code']
         region_info = {CODE: region_code, REGION: trend_manager.code_to_name[region_code]}
         region_trend = RegionTrend(region_info, video_objs)
+        trend_manager.insert_to_db(region_trend)
         region_trends.append(region_trend)
 
     return region_trends
 
+def params_unique_combination(baseurl, options):
+    alphabetized_keys = sorted(options.keys())
+    res = []
+    for k in alphabetized_keys:
+            res.append("{}-{}".format(k, options[k]))
+    return baseurl + "_".join(res)
+
 def video_list_by_popular(client, options):
-  video_response = client.videos().list(
-      part='snippet,contentDetails,statistics',
-      chart='mostPopular',
-      maxResults=options['max_results'],
-      regionCode=options['region_code']
-  ).execute()
+  # check if the response is already in cache
+  unique_ident = params_unique_combination('https://www.googleapis.com/youtube/v3/videos', options)
+  response = cache_manager.get_from_cache(unique_ident)
 
+  # request video list if not in cache and save it to cache!
+  if response == None:
+      logging.debug("not in cache, request url")
+      response = client.videos().list(
+          part='snippet,contentDetails,statistics',
+          chart='mostPopular',
+          maxResults=options['max_results'],
+          regionCode=options['region_code']
+      ).execute()
+      cache_manager.set_in_cache(unique_ident, response)
+
+  # parse video id, title, kind from the response and save it to list
+  logging.debug("video_response: {}".format(response))
   videos = []
-  # Add each result to the appropriate list, and then display the lists of
-  # matching videos, channels, and playlists.
-  logging.debug("search_response type: {}".format(video_response))
-
-  for video_result in video_response.get('items', []):
+  for video_result in response.get('items', []):
     if video_result[KIND] == 'youtube#video':
         video = {}
         video[KIND] = 'video'
@@ -177,7 +204,6 @@ def video_list_by_popular(client, options):
   return videos
 
 def search_list_by_location(client, options):
-
   search_response = client.search().list(
     type='video',
     location=options['location'],
@@ -235,6 +261,7 @@ if __name__ == '__main__':
   # ACTION ITEM for developers:
   #     When running in production *do not* leave this option enabled.
   os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+  cache_manager = CacheManager()
   trend_manager = TrendManager()
 
   # Specify a hostname and port that are set as a valid redirect URI
