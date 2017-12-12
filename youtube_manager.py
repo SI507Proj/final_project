@@ -17,8 +17,9 @@ REGION = 'region'
 URLS = 'urls'
 
 class TrendManager(object):
-    codes = ['US', 'KR']
-    code_to_name = {'US': 'USA', 'KR': 'Korea'}
+    code_to_name = {'US': 'USA', 'KR': 'Korea', 'SE': 'Sweden', 'CA': 'Canada'}
+    codes = code_to_name.keys()
+
     def __init__(self):
         self.loc_quries = self.__generate_location_query()
         self.reg_quries = self.__generate_region_query()
@@ -37,13 +38,13 @@ class TrendManager(object):
         return quries
 
     def __generate_region_query(self):
-        quries = []
+        queries = []
         for code in self.codes:
             options = {}
-            options['max_results'] = 10
+            options['max_results'] = 12
             options['region_code'] = code
-            quries.append(options)
-        return quries
+            queries.append(options)
+        return queries
 
     def insert_to_db(self, region_trend):
         region_data = {'Code': region_trend.code,  'Name': region_trend.region}

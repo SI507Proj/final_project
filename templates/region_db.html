@@ -8,21 +8,31 @@
 
         <!-- Let's add a bit of styling to make it look pretty -->
         <link rel="stylesheet" href="/static/style.css">
+
+        <table>
+            <tr>
+                <td><a href="/">Youtube Trend Right Now</a></td>
+            </tr>
+            <tr>
+                <td><a href="/region_db">Youtube Trend History in Database</a></td>
+            </tr>
+        </table>
     </head>
 
     <body>
         <div class="content">
             <form class="" action="/region_db" method="get">
                 <label>
-                    <h>DB Search Region, USA or Korea</h>
-                    <input type="text" name="q"><br>
+                    <h><font color="#EC7063"><strong>Please type in one of below options to see a region trend history</strong></font></h>
+                    <p><font color="#EC7063"><strong>USA or Korea or Sweden or Canada</strong></font></p>
+                    <input type="text" value="USA" name="q"><br>
                 </label>
                 <button type="submit" name="button">Send</button>
             </form>
 
             <main>
                 <br>
-                <h>Trend Collected In Database</h>
+                <h><font color="#EC7063"><strong>Region Trends Saved in Database</strong></font></h>
                 <br>
                 {% for item in items %}
                     <b>{{ item }}</b>

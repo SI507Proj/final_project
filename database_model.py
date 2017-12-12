@@ -33,8 +33,8 @@ class DBManager(object):
     # create Region and Video database tables
     def __setup_database(self):
 
-        # self.db_cur.execute("""DROP TABLE IF EXISTS "Region" CASCADE""")
-        # self.db_cur.execute("""DROP TABLE IF EXISTS "Video" """)
+        #self.db_cur.execute("""DROP TABLE IF EXISTS "Region" CASCADE""")
+        #self.db_cur.execute("""DROP TABLE IF EXISTS "Video" """)
 
         # Create States table
         # TODO how to place hold Region table name
@@ -46,10 +46,11 @@ class DBManager(object):
 
         # Create Sites table
         self.db_cur.execute("""CREATE TABLE IF NOT EXISTS "Video" (
-                       "ID" VARCHAR(40) UNIQUE PRIMARY KEY,
+                       "ID" VARCHAR(40) NOT NULL,
                        "Title" VARCHAR(256),
                        "Kind" VARCHAR(8),
                        "Code" VARCHAR(8),
+                       PRIMARY KEY ("ID", "Code"),
                        FOREIGN KEY ("Code") REFERENCES "Region" ("Code")
                        )""")
         self.db_conn.commit()
@@ -59,7 +60,7 @@ class DBManager(object):
     # insert information to database
     def insert(self, table, data_dict):
         column_names = data_dict.keys()
-        print(data_dict)
+        # print(data_dict)
 
         # generate insert into query string
         query = sql.SQL("""INSERT INTO "{0}"({1}) VALUES({2}) ON CONFLICT DO NOTHING """).format(
@@ -82,3 +83,19 @@ class DBManager(object):
 
         print(response)
         return response
+
+    def select_all(self, table):
+        self.db_cur.execute('''SELECT * FROM "{}" '''.format(table))
+        result = self.db_cur.fetchall()
+        print(result)
+        return result
+
+    def truncate_tables(self):
+        self.db_cur.execute("""TRUNCATE "Region" CASCADE """)
+        self.db_cur.execute("""TRUNCATE "Video" """)
+        self.db_conn.commit()
+
+    def drop_tables(self):
+        self.db_cur.execute("""DROP TABLE IF EXISTS "Region" CASCADE""")
+        self.db_cur.execute("""DROP TABLE IF EXISTS "Video" """)
+        self.db_conn.commit()

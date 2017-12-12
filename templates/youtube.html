@@ -3,17 +3,28 @@
     <head>
         <meta charset="utf-8">
         <title>YouTube Trend Results</title>
+        <link rel="stylesheet" href="/static/style.css">
+
+        <table>
+            <tr>
+                <td><a href="/">Youtube Trend Right Now</a></td>
+            </tr>
+            <tr>
+                <td><a href="/region_db">Youtube Trend History in Database</a></td>
+            </tr>
+        </table>
+
     </head>
     <body>
         {% for trend in items_to_embed%}
             <header>
-                <h1>Youtube Trend in {{ trend['region'] }}</h1>
+                <h2><font color="#EC7063">Youtube Trend in {{ trend['region'] }}</font></h2>
             </header>
 
             <main>
                 {% for link in trend['urls'] %}
                     <iframe src="{{ link }}"
-                    width="560" height="315" frameborder="0" allowfullscreen allow="encrypted-media"></iframe>
+                     width="210" height="118" frameborder="0" allowfullscreen allow="encrypted-media"></iframe>
                 {% endfor %}
             </main>
        {% endfor %}

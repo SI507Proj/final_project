@@ -60,6 +60,7 @@ def youtube_api_request():
   #              credentials in a persistent database instead.
   flask.session['credentials'] = credentials_to_dict(credentials)
 
+  logging.debug("Start query")
   region_trends = query_region_trend(client)
   info_to_embed = []
   for trend in region_trends:
