@@ -33,6 +33,9 @@ db_password = ''
 1. SI507F17_finalproject.py
 - run flask server
 - request token using OAuth2
+- referenced below API sites
+- https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps
+- https://developers.google.com/youtube/v3/docs/search/list
 - access Youtube API 'https://www.googleapis.com/youtube/v3/videos'
 - retrieve Trend Youtube videos
 
